@@ -1,19 +1,34 @@
 #include <stdio.h>
 
-__global__ void conv(float *image, float *ker, float *out, int k_size, int n_ker){
+__global__ void conv(float *image, float *ker, float *out, int im_size, int k_size, int n_ker){
     int tid_x = threadIdx.x;
     int tid_y = threadIdx.y;
     int b_id = blockIdx.x;
     
-        for(int j = 0; j<5; j++){
-            for(int k = 0; k<5; k++){
-                int ker_co = b_id*25 + 5*j + k;
-                int im_co = (j+tid_y)*32 + k + tid_x;
-                out[b_id*28*28 + tid_y*28 + tid_x] += image[im_co] * ker[ker_co];
+        for(int j = 0; j<k_size; j++){
+            for(int k = 0; k<k_size; k++){
+                int ker_co = b_id*k_size*k_size + k_size*j + k;
+                int im_co = (j+tid_y)*im_size + k + tid_x;
+                out[b_id*(im_size - k_size + 1)*(im_size - k_size + 1) + tid_y*(im_size - k_size + 1) + tid_x] += image[im_co] * ker[ker_co];
             }
         }
 //     out[b_id*28*28 + tid_y*28 + tid_x] = tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
 }
+
+// __global__ void conv(float *image, float *ker, float *out, int k_size, int n_ker){
+//     int tid_x = threadIdx.x;
+//     int tid_y = threadIdx.y;
+//     int b_id = blockIdx.x;
+    
+//         for(int j = 0; j<5; j++){
+//             for(int k = 0; k<5; k++){
+//                 int ker_co = b_id*25 + 5*j + k;
+//                 int im_co = (j+tid_y)*32 + k + tid_x;
+//                 out[b_id*28*28 + tid_y*28 + tid_x] += image[im_co] * ker[ker_co];
+//             }
+//         }
+// //     out[b_id*28*28 + tid_y*28 + tid_x] = tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
+// }
 
 __global__ void averagePool(float *in, int len_x, int len_y, int len_z, float *out){
     int tid_x = threadIdx.x;
@@ -35,7 +50,7 @@ void init(float *image, int L, int n_ker = 1){
     for(int l = 0; l < n_ker; l++){
         for(int i = 0; i<L; i++){
             for(int j = 0; j<L; j++){
-                image[l*L*L + i*L + j] = i + j + 2*l;
+                image[l*L*L + i*L + j] = i;//i + j + 2*l;
             }
         }
     }
@@ -101,7 +116,7 @@ void testConv(){
     
     dim3 threadPerBlock(28, 28);
     
-    conv<<<n_ker, threadPerBlock>>>(image_d, ker_d, out_d, k_size, n_ker);
+    conv<<<n_ker, threadPerBlock>>>(image_d, ker_d, out_d, L, k_size, n_ker);
     cudaMemcpy(out, out_d, sizeof(float) * L_out, cudaMemcpyDeviceToHost);
     print_mat(out, 28, n_ker*28);
     cudaDeviceSynchronize();
@@ -138,8 +153,8 @@ void testMaxPool(){
     cudaDeviceSynchronize();
 }
 int main(){
-    testMaxPool();
-//     testConv();
+//     testMaxPool();
+    testConv();
     
     return 0;
 }
