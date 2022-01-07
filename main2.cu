@@ -56,15 +56,18 @@ void init(float *image, int L, int n_ker = 1){
     }
 }
 
+// identity filter
 void init_ker(float *ker, int L){
     ker[(L/2)*L + L/2] = 1;
 }
 
+// edge detector horizontal
 void init_ker2(float *ker, int L){
     ker[(L*L) + (L/2)*L + L/2 - 1] = -1;
     ker[(L*L) + (L/2)*L + L/2 + 1] = 1;
 }
 
+// edge detector vertical
 void init_ker3(float *ker, int L){
     ker[2*(L*L) + (L/2 - 1)*L + L/2 ] = -1;
     ker[2*(L*L) + (L/2 + 1)*L + L/2] = 1;

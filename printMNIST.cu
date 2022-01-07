@@ -50,12 +50,12 @@ int main() {
   fread(&nbImg, sizeof(int), 1, fptr);
   fread(&nbRows, sizeof(int), 1, fptr);
   fread(&nbCols, sizeof(int), 1, fptr);
-/*
-  printf("Nb Magic : %u \n", magic);
-  printf("Nb Img : %u \n", nbImg);
-  printf("Nb Rows : %u \n", nbRows);
-  printf("Nb Cols : %u \n", nbCols);
-*/
+
+//   printf("Nb Magic : %u \n", magic);
+//   printf("Nb Img : %u \n", nbImg);
+//   printf("Nb Rows : %u \n", nbRows);
+//   printf("Nb Cols : %u \n", nbCols);
+
   for(i=0; i<HEIGHT; i++){
     for(j=0; j<WIDTH; j++){ 
       fread(&val, sizeof(unsigned char), 1, fptr);  
@@ -66,6 +66,17 @@ int main() {
   }
 
   imgColorPrint(HEIGHT, WIDTH, img);
+    
+    for(i=0; i<HEIGHT; i++){
+        for(j=0; j<WIDTH; j++){ 
+          fread(&val, sizeof(unsigned char), 1, fptr);  
+          img[i][j][0]=(int)val*color[0]/255;
+          img[i][j][1]=(int)val*color[1]/255;
+          img[i][j][2]=(int)val*color[2]/255;
+        }
+      }
+
+      imgColorPrint(HEIGHT, WIDTH, img);
 
   // setup image grayscale
   for(i=0; i<HEIGHT; i++){

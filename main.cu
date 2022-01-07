@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <time.h>
-//  token : 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
+//  token : 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
 
 
 void MatrixInit(float *M, int n, int p){
@@ -44,8 +44,8 @@ void MatrixMult(float *M1, float *M2, float *Mout, int n){
     }
 }
 
-void testMatrixMult(){
-    int n = 1000;
+void testMatrixMult(int mat_size){
+    int n = mat_size;
     float *M = (float *) malloc(sizeof(float) * n * n);
     float *Mout = (float *) malloc(sizeof(float) * n * n);
     
@@ -116,8 +116,8 @@ void testCudaMatrixAdd(){
     cudaFree(d_M);
 }
 
-void testCudaMatrixMult(){
-    int n = 1000;
+void testCudaMatrixMult(int mat_size){
+    int n = mat_size;
     float *d_M, *d_Mout;
 
     float *M = (float *) malloc(sizeof(float) * n * n);
@@ -159,7 +159,8 @@ void testCudaMatrixMult(){
 
 int main(){
 //     testCudaMatrixAdd();
-    testCudaMatrixMult();
-    testMatrixMult();
+    int n = 4000; // a speed factor of about 160 for n = 2000 and about 80 for n = 1000, 250 for n = 3000, 400 for n = 4000
+    testCudaMatrixMult(n);
+    testMatrixMult(n);
     return 0;
 }
