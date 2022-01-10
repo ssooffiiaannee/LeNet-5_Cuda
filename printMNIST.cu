@@ -55,19 +55,8 @@ int main() {
 //   printf("Nb Img : %u \n", nbImg);
 //   printf("Nb Rows : %u \n", nbRows);
 //   printf("Nb Cols : %u \n", nbCols);
-
-  for(i=0; i<HEIGHT; i++){
-    for(j=0; j<WIDTH; j++){ 
-      fread(&val, sizeof(unsigned char), 1, fptr);  
-      img[i][j][0]=(int)val*color[0]/255;
-      img[i][j][1]=(int)val*color[1]/255;
-      img[i][j][2]=(int)val*color[2]/255;
-    }
-  }
-
-  imgColorPrint(HEIGHT, WIDTH, img);
-    
-    for(i=0; i<HEIGHT; i++){
+    for(int N = 0; N < 8; N++){
+      for(i=0; i<HEIGHT; i++){
         for(j=0; j<WIDTH; j++){ 
           fread(&val, sizeof(unsigned char), 1, fptr);  
           img[i][j][0]=(int)val*color[0]/255;
@@ -75,8 +64,21 @@ int main() {
           img[i][j][2]=(int)val*color[2]/255;
         }
       }
+         imgColorPrint(HEIGHT, WIDTH, img);
+    }
 
-      imgColorPrint(HEIGHT, WIDTH, img);
+     
+    
+//     for(i=0; i<HEIGHT; i++){
+//         for(j=0; j<WIDTH; j++){ 
+//           fread(&val, sizeof(unsigned char), 1, fptr);  
+//           img[i][j][0]=(int)val*color[0]/255;
+//           img[i][j][1]=(int)val*color[1]/255;
+//           img[i][j][2]=(int)val*color[2]/255;
+//         }
+//       }
+
+//       imgColorPrint(HEIGHT, WIDTH, img);
 
   // setup image grayscale
   for(i=0; i<HEIGHT; i++){
