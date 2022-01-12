@@ -76,7 +76,7 @@ void init_ker2(float *ker, int L, int n_c){
 // edge detector vertical
 void init_ker3(float *ker, int L, int n_c){
     for(int i = 0; i<n_c; i++){
-        ker[i*L*L + 2*n_c*(L*L) + (L/2 - 1)*L + L/2 ] = -1;
+        ker[i*L*L + 2*n_c*(L*L) + (L/2 - 1)*L + L/2] = -1;
         ker[i*L*L + 2*n_c*(L*L) + (L/2 + 1)*L + L/2] = 1;
     }
 }
