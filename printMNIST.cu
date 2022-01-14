@@ -60,8 +60,8 @@ int main() {
         for(j=0; j<WIDTH; j++){ 
           fread(&val, sizeof(unsigned char), 1, fptr);  
           img[i][j][0]=(int)val*color[0]/255;
-          img[i][j][1]=(int)val*color[1]/255;
-          img[i][j][2]=(int)val*color[2]/255;
+//           img[i][j][1]=(int)val*color[1]/255;
+//           img[i][j][2]=(int)val*color[2]/255;
         }
       }
          imgColorPrint(HEIGHT, WIDTH, img);
@@ -81,16 +81,16 @@ int main() {
 //       imgColorPrint(HEIGHT, WIDTH, img);
 
   // setup image grayscale
-  for(i=0; i<HEIGHT; i++){
-    for(j=0; j<WIDTH; j++){
-        img[i][j][0] = ((i+j)*4)%255;
-        img[i][j][1] = ((i+j)*4)%255;
-        img[i][j][2] = ((i+j)*4)%255;
-    }
-  }
+//   for(i=0; i<HEIGHT; i++){
+//     for(j=0; j<WIDTH; j++){
+//         img[i][j][0] = ((i+j)*4)%255;
+//         img[i][j][1] = ((i+j)*4)%255;
+//         img[i][j][2] = ((i+j)*4)%255;
+//     }
+//   }
 
-  // print image
-  imgColorPrint(HEIGHT, WIDTH, img);
+//   // print image
+//   imgColorPrint(HEIGHT, WIDTH, img);
   
   exit(EXIT_SUCCESS);
 }

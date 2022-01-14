@@ -1,198 +1,144 @@
 #include <stdio.h>
 #include "weights.h"
 
-
-// nvcc compilation not working when jupyter-lab kernel is running
-
-__global__ void Conv2d(float *image, float *ker, float *out, float *biases, int im_size, int k_size, int n_ker, int n_c){    
-    int tid_x = threadIdx.x;
-    int tid_y = threadIdx.y;
-    int b_id = blockIdx.x;
-    int out_size = im_size - k_size + 1;
-
-    for(int i = 0; i < n_c; i++){
-        for(int j = 0; j<k_size; j++){
-            for(int k = 0; k<k_size; k++){
-                int ker_co = i*k_size*k_size + b_id*k_size*k_size*n_c + k_size*j + k;
-                int im_co = i*im_size*im_size + (j+tid_y)*im_size + k + tid_x;
-                out[b_id*out_size*out_size + tid_y*(out_size) + tid_x] += image[im_co] * ker[ker_co];
-//                 printf("%f \n", out[b_id*out_size*out_size + tid_y*(out_size) + tid_x]);
-//                 if(image[im_co] != 0)
-//                     printf("%d %d %d %f %f \n", im_co, (j+tid_y), k + tid_x, image[im_co], ker[ker_co]);
-            }
-        }
-    }
-//     printf("%f\n", out[b_id*out_size*out_size + tid_y*(out_size) + tid_x]);
-    out[b_id*out_size*out_size + tid_y*(out_size) + tid_x] = tanh(out[b_id*out_size*out_size + tid_y*(out_size) + tid_x] + biases[b_id]);
-//     out[b_id*out_size*out_size + tid_y*(out_size) + tid_x] = out[b_id*out_size*out_size + tid_y*(out_size) + tid_x];// + biases[b_id];
-//     printf("%f\n", out[b_id*out_size*out_size + tid_y*(out_size) + tid_x]);
-
-}
-
-// __global__ void Conv2d(){
-//     printf("sdj\n");
+// __global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int H, int W){
+//     int l = blockIdx.y;
+//     int c = blockIdx.x;
+//     int tid = threadIdx.x;
+//     int n_seg = W/(blockDim.x + 1);
+    
+//     if((l < H) &&  (c < H)){
+//         for(int i = 0; i <= n_seg; i++){
+//             if(i*blockDim.x + tid >= W)
+//                 break;
+//             Mout[l*H + c] += M1[l*W + i*blockDim.x + tid] * M2[(tid + i*blockDim.x)*H + c];
+//             printf("%f %d %f %f\n",Mout[l*H + c], l*H + c, M1[l*W + i*blockDim.x + tid], M2[(tid + i*blockDim.x)*H + c]);
+//         }
+//     }
 // }
 
-__global__ void averagePool(float *in, int len_x, int len_y, int len_z, float *out){
-    int tid_x = threadIdx.x;
-    int tid_y = threadIdx.y;
-    int b_id = blockIdx.x;
-    int surf = len_x*len_y;
-//     printf("%d %d %d\n", tid_x, tid_y, b_id);
-    out[surf/4*b_id + tid_y*len_x/2 + tid_x] = (in[surf*b_id + tid_y*len_x*2 + tid_x*2] + 
-                                                in[surf*b_id + tid_y*len_x*2 + tid_x*2 + 1] + 
-                                                in[surf*b_id + tid_y*len_x*2 + tid_x*2 + len_x] + 
-                                                in[surf*b_id + tid_y*len_x*2 + tid_x*2 + len_x + 1])/4;
-//     printf("%f\n", in[tid_x]);
-}
+// __global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int H, int W){
+//     int l = blockIdx.y;
+//     int c = blockIdx.x;
+//     for(int i = 0; i<W; i++){
+//         Mout[l*H + c] += M1[l*W + i]*M2[c*W + i];
+//     }
+// }
 
-__device__ float activation_tanh(float M){
-    return tanh(M);
-}
-
-__device__ float activation_softmax(float *vec, int n, int i){
-    float sum = 0;
-    
-    for(int j = 0; j<n; j++){
-        sum += exp(vec[j]);
+__global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int H, int W, int H2){
+    int l = blockIdx.y;
+    int c = blockIdx.x;
+    for(int i = 0; i<W; i++){
+        Mout[l*H2 + c] += M1[l*W + i]*M2[c*H2 + i];
+//         if(l*H + c == 1)
+//             printf("%f %f %d %d %d\n", M1[l*W + i], M2[c*W + i], c, W, i);
     }
-    
-    return exp(vec[i])/sum;
+//     Mout[l*H2 + c] = (Mout[l*H2 + c]  + b[l*H2 + c]);
 }
 
-void init(float *image, int L, int n_ker){
-    for(int l = 0; l < n_ker; l++){
-        for(int i = 0; i<L; i++){
-            for(int j = 0; j<L; j++){
-                image[l*L*L + i*L + j] = i*L + j;//i;//i + j + 2*l;
-            }
+// __global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int H, int W){
+//     int l = blockIdx.y;
+//     int c = blockIdx.x;
+//     for(int i = 0; i<W; i++){
+//         Mout[l*H + c] += M1[l*W + i]*M2[i*H + c];
+// //         printf("%f %d %f %f %d %d %d %d\n",Mout[l*H + c], l*H + c, M1[l*W + i], M2[i*H + c], l, c, l*W + i, i*H + l);
+//     }
+// }
+
+void transpose(float *in, float *out, int H, int W){
+    for(int i = 0; i<H; i++){
+        for(int j = 0; j<W; j++){
+            out[j*H + i] = in[i*W + j];
         }
     }
 }
 
-
-void print_vec(float *vec, int L){
-    for(int i = 0; i<L; i++){
-        printf("%f\n", vec[i]);
+void init(float *M1, int H, int W){
+    for(int i = 0; i<H; i++){
+        for(int j = 0; j<W; j++)
+            M1[i*W + j] = i * W + j + 1;
     }
 }
 
-void print_mat(float *vec, int L, int H, int n_c){
+void print_mat(float *vec, int H, int W, int n_c){
     for(int l = 0; l<n_c; l++){
         for(int i = 0; i<H; i++){
-            for(int j = 0; j<L; j++)
+            for(int j = 0; j<W; j++)
 //                 printf("%d ", 7*((int) ceil(vec[l*L*H + i*L + j])));
-                printf("%1.6f ", vec[l*L*H + i*L + j]);
+                printf("%1.6f ", vec[l*W*H + i*W + j]);
             printf("\n");
         }
         printf("\n");
     }
 }
 
+// void testCudaMatrixMult(int H, int W){
+//     float *d_M, *d_Mout;
 
-float * Conv1(float *im, int H, int W, float *ker, float *biases, int n_ker, int n_c){
-    int k_size = 5;
-    int k_vol = k_size * k_size * n_ker;
-    int out_vol = (W-k_size + 1)*(H-k_size + 1)*n_ker;
-    int img_vol = H * W * n_c;
+//     float *M = (float *) malloc(sizeof(float) * H * W);
+//     float *Mout = (float *) malloc(sizeof(float) * H * W);
     
-//     float *kernel = (float *) malloc(sizeof(float) k_vol);
-    float *out = (float *) malloc(sizeof(float) * out_vol);
-                                     
-    float *im_d, *out_d, *ker_d, *biases_d;
-    cudaMalloc(&im_d, sizeof(float) * img_vol);
-    cudaMalloc(&out_d, sizeof(float) * out_vol);
-    cudaMalloc(&ker_d, sizeof(float) * k_vol);
-    cudaMalloc(&biases_d, sizeof(float) * n_ker);
-    
-    cudaMemcpy(im_d, im, sizeof(float) * img_vol, cudaMemcpyHostToDevice);
-    cudaMemcpy(ker_d, ker, sizeof(float) * k_vol, cudaMemcpyHostToDevice);
-    cudaMemcpy(biases_d, biases, sizeof(float) * n_ker, cudaMemcpyHostToDevice);
-    
-    dim3 threadPerBlock((W-k_size + 1), (H-k_size + 1));
-    dim3 blockPerGrid(n_ker);
-    printf("################ Conv1 ########################\n\n");
-//     Conv2d<<<blockPerGrid, threadPerBlock>>>();
-    Conv2d<<<blockPerGrid, threadPerBlock>>>(im_d, ker_d, out_d, biases_d, H, k_size, n_ker, n_c);
-    cudaDeviceSynchronize();
+//     cudaMalloc(&d_M, sizeof(float)* H * W);
+//     cudaMalloc(&d_Mout, sizeof(float)* H * W);
 
-    cudaMemcpy(out, out_d, sizeof(float) * out_vol, cudaMemcpyDeviceToHost);
-    
-//     print_mat(out, (W-k_size + 1), (H-k_size + 1), n_ker);
-    
-    cudaFree(im_d);
-    cudaFree(out_d);
-    cudaFree(ker_d);
-    cudaFree(biases_d);
-    
-//     free(out);
-    return out;
-}
+//     for(int i = 0; i<H * W; i++)
+//         M[i] = 3;
 
-float * MAP1(float *in, unsigned int W, unsigned int H, int n_c){
-    float *outMAP_d,  *in_d;
-    int vol_out_MAP = W * H * n_c / 4;
-    int in_vol = W * H * n_c;
-    
-    float *outMAP = (float *) malloc(sizeof(float) * vol_out_MAP);
-    cudaMalloc(&outMAP_d, sizeof(float) * vol_out_MAP);
-    cudaMalloc(&in_d, sizeof(float) * in_vol);
-    cudaMemcpy(in_d, in, sizeof(float) * in_vol, cudaMemcpyHostToDevice);
+//     cudaMemcpy(d_M, M, sizeof(float) * H * W, cudaMemcpyHostToDevice);
 
-    averagePool<<<n_c, { W/2, H/2}>>>(in_d, W, H, n_c, outMAP_d);
-    cudaDeviceSynchronize();
-    cudaMemcpy(outMAP, outMAP_d, sizeof(float) * vol_out_MAP, cudaMemcpyDeviceToHost);
+//     dim3 threadsPerBlock(1024);
+//     dim3 blockPerGrid(n, n);
     
-    printf("################ MAP1 ########################\n\n");
-//     print_mat(outMAP, W/2, H/2, n_c);
-//     print_mat(in, W, H, n_c);
+//     clock_t begin = clock();
+//     cudaMatrixMult<<<blockPerGrid, threadsPerBlock>>>(d_M, d_M, d_Mout, n, n);
+// //     cudaMatrixMult<<<blockPerGrid, threadsPerBlock>>>(d_M, d_M, d_Mout, n, n);
+//     cudaDeviceSynchronize();
+//     clock_t end = clock();
     
-    cudaFree(outMAP_d);
+//     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+//     printf("GPU matrix multiplication time for n = %d: %f\n",n , time_spent);
     
-//     free(outMAP);
-    return outMAP;
-}
-
-void zero_padding(float *im, int H, int pad, float *out){
-    for(int i = 0; i<H + 2*pad; i++){
-        for(int j = 0; j<H + 2*pad; j++){
-            if((i < pad) || (j < pad) || (i >= H + pad) || (j >= H + pad)){
-                out[i*(H + 2*pad) + j] = 0;
-                continue;
-            }
-//             if(abs(im[(i - pad)*H + j - pad] - 0.996) < 0.001) printf("%d %d %f\n", i, j, im[(i - pad)*H + j - pad]);
-            out[i*(H + 2*pad) + j] = im[(i - pad)*H + j - pad];
-        }
-    }
-}
+//     cudaFree(d_M);
+//     cudaFree(d_Mout);
+    
+//     free(M);
+//     free(Mout);
+// }
 
 int main(){
-    int H = 5, pad = 0, n_c = 2;
-    int H_p = H + 2*pad;
-    float im[H * H * n_c];
-    float im_p[H_p * H_p];
-
-    init(im, H, 1);
-    zero_padding(im, H, pad, im_p);
+    int H = 4, W = 2, H2 = 1;
+    float M1[H*W]; // M1*M2
+    float M2[H*W];
+    float Mout[H*H] = {0};
+//     float *Mout = (float *) malloc(sizeof(float) * H * H);
+    init(M1, H, W);
     
-//     print_mat(im_p, H_p, H_p , 1);
+    print_mat(M1, H, W, 1);
     
-//     float *l1;
-    for(int i = 0; i<2400; i++)
-        printf("%f\n", conv2d_1_w[i]);
+    float *M1_d, *M2_d, *Mout_d;
     
+    cudaMalloc(&M1_d, sizeof(float)* H * W);
+    cudaMalloc(&M2_d, sizeof(float)* H * W);
+    cudaMalloc(&Mout_d, sizeof(float)* H * H);
     
+    init(M2, H, H2);
+//     transpose(M1, M2, H, W);
+    print_mat(M2, W, H2, 1);
     
-//     l1 = Conv1(im_p, H_p, H_p, conv2d_w, conv2d_b, 6, 1);
-//     l1 = MAP1(l1, H, H, 6);
+    cudaMemcpy(M1_d, M1, sizeof(float) * H * W, cudaMemcpyHostToDevice);
+    cudaMemcpy(M2_d, M2, sizeof(float) * H * H2, cudaMemcpyHostToDevice);
+//     cudaMemcpy(Mout_d, Mout, sizeof(float) * H * H, cudaMemcpyHostToDevice);
     
-// //     print_mat(l1, H/2, H/2, 6);
-//     l1 = Conv1(l1, H/2, H/2, conv2d_1_w, conv2d_1_b, 16, 6);
-//     print_mat(l1, H/2, H/2, 16);
-// //     l1 = MAP1(l1, H/2 - 4, H/2 - 4, 16);
-// //     print_mat(l1, (H/2 - 4)/2, (H/2 - 4)/2, 16);
+    dim3 n_blocks(H2, H);
     
-//     free(l1);
+    cudaMatrixMult<<<n_blocks, 1>>>(M1_d, M2_d, Mout_d, H, W, H2);
+    cudaDeviceSynchronize();
+    
+    cudaMemcpy(Mout, Mout_d, sizeof(float) * H * H2, cudaMemcpyDeviceToHost);
+    
+//     print_mat(M1, H, W, 1);
+//     print_mat(M2, W, H, 1);
+    print_mat(Mout, H, H2, 1);
+    
     return 0;
 }
-
