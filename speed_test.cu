@@ -26,6 +26,18 @@ void MatrixAdd(float *M1, float *M2, float *Mout, int n, int p){
     }
 }
 
+void print_mat(float *vec, int L, int H, int n_c){
+    for(int l = 0; l<n_c; l++){
+        for(int i = 0; i<H; i++){
+            for(int j = 0; j<L; j++)
+//                 printf("%d ", 7*((int) ceil(vec[l*L*H + i*L + j])));
+                printf("%1.6f ", vec[l*L*H + i*L + j]);
+            printf("\n");
+        }
+        printf("\n");
+    }
+}
+
 __global__ void cudaMatrixAdd(float *M1, float *M2, float *Mout, int n, int p){
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     
@@ -44,7 +56,7 @@ void MatrixMult(float *M1, float *M2, float *Mout, int n){
     }
 }
 
-void testMatrixMult(int mat_size){
+double testMatrixMult(int mat_size){
     int n = mat_size;
     float *M = (float *) malloc(sizeof(float) * n * n);
     float *Mout = (float *) malloc(sizeof(float) * n * n);
@@ -58,34 +70,10 @@ void testMatrixMult(int mat_size){
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("cpu matrix multiplication time for n = %d: %f\n",n , time_spent);
     
-//     MatrixPrint(Mout, n, n);
-    
     free(M);
     free(Mout);
-}
-
-// __global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int n_l, int n_c){
-//     int l = blockIdx.y;
-//     int c = blockIdx.x;
-//     int i = 0;
-// //     printf("%d\n", gridDim.x);
-//     for(; i < n_c; i++){
-//         Mout[l*n_c + c] += M1[l*n_c + i] * M2[i*n_c + c];
-//     }
-// }
-
-
-__global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int n_l, int n_c){
-    int l = blockIdx.y;
-    int c = blockIdx.x;
-    int tid = threadIdx.x;
-    int seg_sz = n_c/blockDim.x + 1;
     
-    for(int i = 0; i < seg_sz; i++){
-        if(i*blockDim.x + tid >= n_c)
-            break;
-        Mout[l*n_c + c] += M1[l*n_c + i*blockDim.x + tid] * M2[(tid + i*blockDim.x)*n_c + c];
-    }
+    return time_spent;
 }
 
 void testCudaMatrixAdd(){
@@ -115,8 +103,18 @@ void testCudaMatrixAdd(){
     cudaFree(d_Mout);
     cudaFree(d_M);
 }
+__global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int n_l, int n_c){
+    int c = blockIdx.x*blockDim.x + threadIdx.x;
+    int l = blockDim.y*blockIdx.y + threadIdx.y;
+    
+    if(l < n_c && c < n_c)
+        for(int i = 0; i < n_c; i++){
+            Mout[l*n_l + c] += M1[l*n_c + i]*M2[i*n_l + c];
+        }
+}
 
-void testCudaMatrixMult(int mat_size){
+
+double testCudaMatrixMult(int mat_size){
     int n = mat_size;
     float *d_M, *d_Mout;
 
@@ -131,36 +129,37 @@ void testCudaMatrixMult(int mat_size){
 
     cudaMemcpy(d_M, M, sizeof(float) * n * n, cudaMemcpyHostToDevice);
 
-    dim3 threadsPerBlock(1024);
+    dim3 threadsPerBlock(32, 32);
     dim3 blockPerGrid(n, n);
     
     clock_t begin = clock();
     cudaMatrixMult<<<blockPerGrid, threadsPerBlock>>>(d_M, d_M, d_Mout, n, n);
-//     cudaMatrixMult<<<blockPerGrid, threadsPerBlock>>>(d_M, d_M, d_Mout, n, n);
     cudaDeviceSynchronize();
     clock_t end = clock();
     
+    cudaMemcpy(Mout, d_Mout, sizeof(float) * n * n, cudaMemcpyDeviceToHost);
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("GPU matrix multiplication time for n = %d: %f\n",n , time_spent);
-    
-//     cudaMemcpy(Mout, d_Mout, sizeof(float) * n * n, cudaMemcpyDeviceToHost);
-    
-    
-//     MatrixPrint(M, n, n);
-//     printf("\n");
-//     MatrixPrint(Mout, n, n);
-    
+    printf("GPU matrix multiplication time for n = %d: %f seconds\n",n , time_spent);
+//     print_mat(Mout, n, n, 1);
+    printf("%f %f\n", Mout[0], Mout[n*n - 1]);
     cudaFree(d_M);
     cudaFree(d_Mout);
     
     free(M);
     free(Mout);
+    
+    return time_spent;
 }
 
 int main(){
-//     testCudaMatrixAdd();
-    int n = 4000; // a speed factor of about 160 for n = 2000 and about 80 for n = 1000, 250 for n = 3000, 400 for n = 4000
-    testCudaMatrixMult(n);
-    testMatrixMult(n);
+    int n;
+    printf("######## n x n matrix multiplication #######\n");
+    printf("Enter matrix size n : \n");
+    scanf("%d", &n);
+    printf("GPU computation running ...\n");
+    double t1 = testCudaMatrixMult(n);
+    printf("CPU computation running ...\n");
+    double t2 = testMatrixMult(n);
+    printf("GPU is %d times faster.\n", (int) (t2/t1));
     return 0;
 }

@@ -2,7 +2,7 @@
 #include "weights.h"
 
 __global__ void cudaMatrixMult(float *Mout, int H, int W){
-    printf("%d %d\n", blockIdx.x, blockIdx.y);
+    printf("%d %d %d %d\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y);
 //     int tid = threadIdx.x;
 //     if(tid < 9)
 //         Mout[tid] += 1;
@@ -50,7 +50,7 @@ int main(){
     
     
     dim3 n_blocks(4, 3);
-    dim3 threadPerBlock(1);
+    dim3 threadPerBlock(33, 32);
     
     cudaMatrixMult<<<n_blocks, threadPerBlock>>>(Mout_d, H, W);
 //     cudaDeviceSynchronize();

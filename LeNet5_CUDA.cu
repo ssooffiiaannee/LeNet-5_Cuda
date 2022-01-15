@@ -142,15 +142,39 @@ void zero_padding(double *im, int H, int pad, double *out){
     }
 }
 
+__global__ void reshape(double *in, double *out, int H, int W, int n_c){
+    int i = blockIdx.x;
+    int j = blockIdx.y;
+    int k = blockIdx.z;
+    
+    out[i*W*n_c + j*n_c + k] = in[k*(W * H) + i*H + j];
+}
+
 double * Flatten(double *in, int H, int W, int n_c){
+    double *in_d, *out_d;
     double *out = (double *) malloc(sizeof(double) * H * W * n_c);
-    for(int i = 0; i<H; i++){
-        for(int j = 0; j<W; j++){
-            for(int k = 0; k < n_c; k++){
-                out[i*W*n_c + j*n_c + k] = in[k*(W * H) + i*H + j];
-            }
-        }
-    }
+    
+    cudaMalloc(&in_d, sizeof(double) * W * H * n_c);
+    cudaMalloc(&out_d, sizeof(double) * W * H * n_c);
+    
+    cudaMemcpy(in_d, in, sizeof(double) * W * H * n_c, cudaMemcpyHostToDevice);
+    
+    dim3 threadPerBlock(1);
+    dim3 blockPerGrid(H, W, n_c);
+    reshape<<<blockPerGrid, threadPerBlock>>>(in_d, out_d, H, W, n_c);
+    cudaDeviceSynchronize();
+    
+    cudaMemcpy(out, out_d, sizeof(double) * W * H * n_c, cudaMemcpyDeviceToHost);
+//     double *out = (double *) malloc(sizeof(double) * H * W * n_c);
+//     for(int i = 0; i<H; i++){
+//         for(int j = 0; j<W; j++){
+//             for(int k = 0; k < n_c; k++){
+//                 out[i*W*n_c + j*n_c + k] = in[k*(W * H) + i*H + j];
+//             }
+//         }
+//     }
+    
+    cudaFree(out_d);
     
     return out;
 }
