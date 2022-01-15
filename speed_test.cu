@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <time.h>
-//  token : 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
 
 
 void MatrixInit(float *M, int n, int p){
