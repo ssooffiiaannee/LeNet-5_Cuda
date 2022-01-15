@@ -15,7 +15,7 @@ __global__ void conv(float *image, float *ker, float *out, int im_size, int k_si
             }
         }
     }
-//     out[b_id*28*28 + tid_y*28 + tid_x] = tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
+//     out[b_id*28*28 + tid_y*28 + tid_x] = activation_tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
 }
 
 // __global__ void conv(float *image, float *ker, float *out, int k_size, int n_ker){
@@ -30,7 +30,7 @@ __global__ void conv(float *image, float *ker, float *out, int im_size, int k_si
 //                 out[b_id*28*28 + tid_y*28 + tid_x] += image[im_co] * ker[ker_co];
 //             }
 //         }
-// //     out[b_id*28*28 + tid_y*28 + tid_x] = tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
+// //     out[b_id*28*28 + tid_y*28 + tid_x] = activation_tanh(out[b_id*28*28 + tid_y*28 + tid_x]);
 // }
 
 __global__ void averagePool(float *in, int len_x, int len_y, int len_z, float *out){
@@ -45,7 +45,7 @@ __global__ void averagePool(float *in, int len_x, int len_y, int len_z, float *o
                                               in[surf*b_id + tid_y*len_x*2 + len_x + tid_x*2 + 1])/4;
 }
 
-__device__ float activation_tanh(float M){
+__device__ float activation_activation_tanh(float M){
     return tanh(M);
 }
 

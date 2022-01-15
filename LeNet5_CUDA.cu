@@ -109,7 +109,7 @@ double * Conv1(double *im, int H, int W, double *ker, double *biases, int n_ker,
     return out;
 }
 
-double * MAP1(double *in, unsigned int W, unsigned int H, int n_c){
+double * averagePool2D(double *in, unsigned int W, unsigned int H, int n_c){
     double *outMAP_d,  *in_d;
     int vol_out_MAP = W * H * n_c / 4;
     int in_vol = W * H * n_c;
@@ -123,7 +123,7 @@ double * MAP1(double *in, unsigned int W, unsigned int H, int n_c){
     cudaDeviceSynchronize();
     cudaMemcpy(outMAP, outMAP_d, sizeof(double) * vol_out_MAP, cudaMemcpyDeviceToHost);
     
-    printf("################ MAP1 ########################\n\n");
+    printf("################ averagePool2D ########################\n\n");
 
     cudaFree(outMAP_d);
     
@@ -280,13 +280,13 @@ int main(){
     
     double *l1;
     l1 = Conv1(im_p, H_p, H_p, conv2d_w, conv2d_b, 6, 1);
-    l1 = MAP1(l1, H, H, 6);
+    l1 = averagePool2D(l1, H, H, 6);
 //     print_mat(l1, H/2, H/2, 6);
     
     l1 = Conv1(l1, H/2, H/2, conv2d_1_w, conv2d_1_b, 16, 6);
 //     print_mat(l1, H/2 - 4, H/2 - 4, 16);
     
-    l1 = MAP1(l1, H/2 - 4, H/2 - 4, 16);
+    l1 = averagePool2D(l1, H/2 - 4, H/2 - 4, 16);
 //     print_mat(l1, (H/2 - 4)/2, (H/2 - 4)/2, 16);
     
     l1 = Flatten(l1, (H/2 - 4)/2, (H/2 - 4)/2, 16);
@@ -303,7 +303,7 @@ int main(){
     print_vec(out, units_3);
     printf("\n################# Answer ###################\n\n");
     int pred_lab = argmax(out, units_3);
-    printf("Model predicted %i with probability %f %%\n", pred_lab, out[pred_lab]);
+    printf("Model predicted %i with probability %f.\n", pred_lab, out[pred_lab]);
     printf("\n#############################################\n");
     
     free(l1);
