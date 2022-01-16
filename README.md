@@ -19,36 +19,37 @@ Toute les couches sont parallelisable.
 Le programme à exécuter est `LeNet5_CUDA.cu`. On fournit un index, et classifie l'image à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 1.
 
 ```
+Enter a number between 0 and 59999 : 1
+  
+################ Conv1 ########################
+
+################ averagePool2D ########################
+
+################ Conv1 ########################
+
+################ averagePool2D ########################
+
+################ Dense ########################
+
+################ Dense ########################
+
+################ Dense ########################
+
 ############### Predictions ############
-Enter a number between 0 and 59999 : 3
-                                                        
-################ Conv1 ########################
-
-################ averagePool2D ########################
-
-################ Conv1 ########################
-
-################ averagePool2D ########################
-
-################ Dense ########################
-
-################ Dense ########################
-
-################ Dense ########################
-label 0 with percentage : 0.000000
-label 1 with percentage : 0.999946
-label 2 with percentage : 0.000001
-label 3 with percentage : 0.000000
-label 4 with percentage : 0.000041
-label 5 with percentage : 0.000000
-label 6 with percentage : 0.000000
-label 7 with percentage : 0.000002
-label 8 with percentage : 0.000010
-label 9 with percentage : 0.000000
+label 0 with probability : 0.999613
+label 1 with probability : 0.000000
+label 2 with probability : 0.000014
+label 3 with probability : 0.000000
+label 4 with probability : 0.000002
+label 5 with probability : 0.000001
+label 6 with probability : 0.000019
+label 7 with probability : 0.000002
+label 8 with probability : 0.000005
+label 9 with probability : 0.000345
 
 ################# Answer ###################
 
-Model predicted 1 with probability 0.999946.
+Model predicted 0 with probability 0.999613.
 
 #############################################
 ```
