@@ -3,7 +3,16 @@
 #include "printImg.h"
 
 // nvcc compilation not working when jupyter-lab kernel is running
-
+/*
+    2D convolutional kernel, every thread will be incharge of the product of a line and column
+    @param:
+        im : input image
+        ker, biases: the weigths and the biases of each kernel
+        out : pointe to output results
+        k_size : kernel size (5 for LeNet5)
+        n_ker : number of kernels
+        n_c : number of channels (number of filters of previous layer)
+*/
 __global__ void Conv2d(double *image, double *ker, double *out, double *biases, int im_size, int k_size, int n_ker, int n_c){    
     int tid_x = threadIdx.x;
     int tid_y = threadIdx.y;
