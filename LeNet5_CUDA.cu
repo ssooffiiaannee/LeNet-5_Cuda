@@ -57,7 +57,7 @@ void init(double *image, int L, int n_ker){
 
 void print_vec(double *vec, int L){
     for(int i = 0; i<L; i++){
-        printf("label %d with percentage : %f\n", i, vec[i]);
+        printf("label %d with probability : %f\n", i, vec[i]);
     }
 }
 
@@ -73,7 +73,17 @@ void print_mat(double *vec, int L, int H, int n_c){
     }
 }
 
-
+/*
+    Apply a 2D Convolution
+    @param:
+        im : input features
+        W, H, n_c : Height, Width and numbre of channels (number of filters of previous layer or 3 for RGB input)
+        ker : pointer to kernel weights
+        biases : pointer to n_ker biases values.
+        n_ker : number of filters to apply
+    @return: 
+        Pointer to double, pointing to Conv result
+*/
 double * Conv1(double *im, int H, int W, double *ker, double *biases, int n_ker, int n_c){
     int k_size = 5;
     int k_vol = k_size * k_size * n_ker * n_c;
@@ -108,7 +118,14 @@ double * Conv1(double *im, int H, int W, double *ker, double *biases, int n_ker,
     
     return out;
 }
-
+/*
+    Apply a 2D average pooling
+    @param:
+        in : input features
+        W, H, n_c : Height, Width and numbre of channels (number of filters of previous layer)
+    @return: 
+        Pointer to double, pointing to average pool result
+*/
 double * averagePool2D(double *in, unsigned int W, unsigned int H, int n_c){
     double *outMAP_d,  *in_d;
     int vol_out_MAP = W * H * n_c / 4;
@@ -142,6 +159,14 @@ void zero_padding(double *im, int H, int pad, double *out){
     }
 }
 
+/*
+    The reshape will reorder the vector of features.
+    @param:
+        in : input features
+        W, H, n_c : Height, Width and numbre of channels (number of filters of previous layer)
+        out : pointer to the output vector
+    @param: 
+*/
 __global__ void reshape(double *in, double *out, int H, int W, int n_c){
     int i = blockIdx.x;
     int j = blockIdx.y;
@@ -165,20 +190,21 @@ double * Flatten(double *in, int H, int W, int n_c){
     cudaDeviceSynchronize();
     
     cudaMemcpy(out, out_d, sizeof(double) * W * H * n_c, cudaMemcpyDeviceToHost);
-//     double *out = (double *) malloc(sizeof(double) * H * W * n_c);
-//     for(int i = 0; i<H; i++){
-//         for(int j = 0; j<W; j++){
-//             for(int k = 0; k < n_c; k++){
-//                 out[i*W*n_c + j*n_c + k] = in[k*(W * H) + i*H + j];
-//             }
-//         }
-//     }
     
     cudaFree(out_d);
     
     return out;
 }
 
+/*
+    Matrix multipliaction for Weights x Dense output
+    @param:
+        M1, M2 : M1 is H x W matrix representing the weights, M2 is H2 x 1 matrix for flatten and dense layers output
+        W, H, H2 : shapes of weights matrix and dense dense outputs (H2 number of units of dense layer)
+        act : Integer, choosing activation function, 1 for tanh activation function, 0 for softmax
+        Mout : pointer to the output vector.
+    @param: 
+*/
 __global__ void cudaMatrixMult(double *M1, double *M2, double *b, double *Mout, int H, int W, int H2, int act){
     int l = blockIdx.y;
     int c = blockIdx.x;
@@ -196,7 +222,17 @@ void zero_init(double *vec, int sz){
     for(int i = 0; i<sz; i++) 
         vec[i] = 0;
 }
-
+/*
+    Dense layer
+    @param:
+        in : input features
+        w, b : Height, Width and numbre of channels (number of filters of previous layer)
+        in_sz : number of units of the previous layer.
+        out_sz : number of units in the dense layer.
+        activation : activation type, 1 for tanh, 0 for softmax
+    @param: 
+        Pointer output results, vector of size out_sz
+*/
 double * Dense(double *in, double *w, double *b, int in_sz, int out_sz, int activation){
     double *b_d, *w_d, *in_d, *out_d;
     double *out = (double *) malloc(sizeof(double) * out_sz);
@@ -220,7 +256,13 @@ double * Dense(double *in, double *w, double *b, int in_sz, int out_sz, int acti
     
     return out;
 }
-
+/*
+    Returns index of the largest value in the vector.
+    @param:
+        vec : input vector
+        n : size of the vector
+    @return: index of the largest value in the vector
+*/
 int argmax(double *vec, int n){
     int id = 0;
     double mn = -1;
@@ -243,8 +285,9 @@ int main(){
     printf("Enter a number between 0 and 59999 : ");
     scanf("%d", &image_number);
     if(image_number < 0 || image_number >59999){
-        printf("!!! Number has to be between 0 and 59999 !!!\n");
-        return 0;
+        printf("!!! Number has to be between 0 and 59999 !!!\n\n");
+        printf("Enter a number between 0 and 59999 : ");
+        scanf("%d", &image_number);
     }
     
     // #############################

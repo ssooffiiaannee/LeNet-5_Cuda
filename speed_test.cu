@@ -67,7 +67,7 @@ double testMatrixMult(int mat_size){
     MatrixMult(M, M, Mout, n);
     clock_t end = clock();    
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("cpu matrix multiplication time for n = %d: %f\n",n , time_spent);
+    printf("cpu matrix multiplication time for n = %d: %f seconds\n",n , time_spent);
     
     free(M);
     free(Mout);
