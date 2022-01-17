@@ -19,7 +19,7 @@ Toute les couches sont parallelisable.
 Le fichier à compiler est `LeNet5_CUDA.cu`. On lui fournit un index, et classifie l'image correspondant à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 0.
 
 ```
-Enter a number between 0 and 59999 : 1
+Enter a number between 0 and 59999 : 3
                                                                 
 ################ Conv1 ########################
 
