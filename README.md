@@ -13,14 +13,14 @@ BLOCK_WIDTH = 32` pour notre cas. Chaque thread par bloc appliquera le produit d
 
 Le nombre de bloc par grid doit être au minimum (N/32 + 1, N/32 + 1), pour pouvoir balayer toutes les lignes et colonnes.
 ## Inference
-Les poids du modèle entrainé sont chargé dans `weights.h`.
+On a entrainé le modèle sur un notebook, les poids du modèle entrainé seront chargé dans le fichier header `weights.h`, de telle façon qu'on puisse directement inclure le fichier `weights.h` et faire appel aux tableaux des poids du réseau entrainé.
 Toute les couches sont parallelisable. 
 
-Le programme à exécuter est `LeNet5_CUDA.cu`. On fournit un index, et classifie l'image à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 1.
+Le fichier à compiler est `LeNet5_CUDA.cu`. On lui fournit un index, et classifie l'image correspondant à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 0.
 
 ```
 Enter a number between 0 and 59999 : 1
-  
+                                                                
 ################ Conv1 ########################
 
 ################ averagePool2D ########################
@@ -36,20 +36,21 @@ Enter a number between 0 and 59999 : 1
 ################ Dense ########################
 
 ############### Predictions ############
-label 0 with probability : 0.999613
-label 1 with probability : 0.000000
-label 2 with probability : 0.000014
+label 0 with probability : 0.000000
+label 1 with probability : 0.999946
+label 2 with probability : 0.000001
 label 3 with probability : 0.000000
-label 4 with probability : 0.000002
-label 5 with probability : 0.000001
-label 6 with probability : 0.000019
+label 4 with probability : 0.000041
+label 5 with probability : 0.000000
+label 6 with probability : 0.000000
 label 7 with probability : 0.000002
-label 8 with probability : 0.000005
-label 9 with probability : 0.000345
+label 8 with probability : 0.000010
+label 9 with probability : 0.000000
 
 ################# Answer ###################
 
-Model predicted 0 with probability 0.999613.
+Model predicted 1 with probability 0.999946.
 
 #############################################
+(base) dofihama32@sia-gpu-compute-01:~/cuda_dir/TP-GPU-CUDA$ 
 ```
