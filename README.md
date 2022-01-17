@@ -2,7 +2,7 @@
 ## Speed CPU vs GPU
 On a testé des multiplication matricielle N x N sur CPU et GPU (`speed_test.cu`). 
 
-Pour N = 2000, le GPU a été 1100x plus rapide, pour N = 10000, le GPU a pris 4 secondes pour faire l'operation, dieu sait combien ça aurait pris pour un CPU ! 
+Pour N = 2000, le GPU a été 1100x plus rapide (53 ms contre 65s), pour N = 10000, le GPU a pris 4 secondes pour faire l'operation, dieu sait combien ça aurait pris pour un CPU ! 
 
 Notre kernel  ``` __global__ void cudaMatrixMult(float *M1, float *M2, float *Mout, int n_l, int n_c) ``` utilise des thread blocks de 32 x 32, (limité à 1024 par thread block), comme l'illuste la figure suivante.
 
