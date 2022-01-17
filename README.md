@@ -52,5 +52,4 @@ label 9 with probability : 0.000000
 Model predicted 1 with probability 0.999946.
 
 #############################################
-(base) dofihama32@sia-gpu-compute-01:~/cuda_dir/TP-GPU-CUDA$ 
 ```
