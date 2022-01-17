@@ -16,7 +16,7 @@ Le nombre de bloc par grid doit être au minimum (N/32 + 1, N/32 + 1), pour pouv
 On a entrainé le modèle sur un notebook, les poids du modèle entrainé seront chargé dans le fichier header `weights.h`, de telle façon qu'on puisse directement inclure le fichier `weights.h` et faire appel aux tableaux des poids du réseau entrainé.
 Toute les couches sont parallelisable. 
 
-Le fichier à compiler est `LeNet5_CUDA.cu`. On lui fournit un index, et classifie l'image correspondant à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 0.
+Le fichier à compiler est `LeNet5_CUDA.cu`. On lui fournit un index, et classifie l'image correspondant à cet index. Dans l'exemple qui suit, l'image à l'index 3 (4ème image du train set `train_x`) est un 1.
 
 ```
 Enter a number between 0 and 59999 : 3
